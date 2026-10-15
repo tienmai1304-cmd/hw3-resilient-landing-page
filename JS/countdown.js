@@ -4,13 +4,15 @@ const COUNTDOWN_TARGET_ISO = "2027-01-01T00:00:00Z";
 const countdownElement = document.querySelector("#countdown");
 
 function getValidTargetTimestamp(isoTimestamp) {
-    const isUtcIso8601 =
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(
+    const match =
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?Z$/.exec(
             isoTimestamp
         );
 
-    if (!isUtcIso8601) {
-        throw new Error("Countdown target must be a UTC ISO 8601 timestamp.");
+    if (!match) {
+        throw new Error(
+            "Countdown target must be a UTC ISO 8601 timestamp."
+        );
     }
 
     const timestamp = Date.parse(isoTimestamp);
@@ -19,8 +21,30 @@ function getValidTargetTimestamp(isoTimestamp) {
         throw new Error("Invalid countdown target timestamp.");
     }
 
+    const parsedDate = new Date(timestamp);
+
+    const expectedYear = Number(match[1]);
+    const expectedMonth = Number(match[2]);
+    const expectedDay = Number(match[3]);
+    const expectedHour = Number(match[4]);
+    const expectedMinute = Number(match[5]);
+    const expectedSecond = Number(match[6]);
+
+    const dateIsValid =
+        parsedDate.getUTCFullYear() === expectedYear &&
+        parsedDate.getUTCMonth() + 1 === expectedMonth &&
+        parsedDate.getUTCDate() === expectedDay &&
+        parsedDate.getUTCHours() === expectedHour &&
+        parsedDate.getUTCMinutes() === expectedMinute &&
+        parsedDate.getUTCSeconds() === expectedSecond;
+
+    if (!dateIsValid) {
+        throw new Error("Invalid UTC calendar date or time.");
+    }
+
     return timestamp;
 }
+
 
 function formatCountdown(remainingMilliseconds) {
     const totalSeconds = Math.max(
